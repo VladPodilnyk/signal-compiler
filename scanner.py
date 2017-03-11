@@ -25,11 +25,14 @@ DELIMETERS = {'<': 200,
 
 ID_TABLE = {}
 
+CONST_TABLE = {}
+
 # functions for initializing basic tables
 
 def init_attr_vector(attr_vect):
     """ The function inits an attribute vector """
 
+    #------------attributes------------
     # 0 - space, eof, eol, etc
     # 1 - 0..9
     # 2 - a-z or A-Z
@@ -54,8 +57,8 @@ def init_attr_vector(attr_vect):
         elif index in range(65, 91) or index in range(97, 123):
             attr_vect[index] = 2
 
-def add_to_table(value):
-    """ The function adds token to an ID_TABLE and returns an appropriate code,\
+def add_to_id_table(value):
+    """ The function adds token to an ID_TABLE and returns an appropriate code\
      if token has already in ID_TABLE then just returns a code"""
 
     if value in KEYWORDS.keys():
@@ -70,6 +73,17 @@ def add_to_table(value):
     else:
         ID_TABLE[value] = len(ID_TABLE) + 1000
         return ID_TABLE[value]
+
+def add_to_cons(value):
+    """ The function adds integer constants to a CONST_TABLE and returns an appropriate code\
+    if constant has already in CONST_TABLE then just returns a code """
+
+    if value in CONST_TABLE.keys():
+        return CONST_TABLE[value]
+
+    else:
+        CONST_TABLE[value] = len(CONST_TABLE) + 300
+        return CONST_TABLE[value]
 
 
 def scanner(file_name):
@@ -87,13 +101,37 @@ def scanner(file_name):
     # information about token; indexes: 0->code, 1->row, 2->column, 3->real value
     token = []
 
-    word_buffer = ''
+    # attribute vector initialization
+    attr_vector = []
+    init_attr_vector(attr_vector)
+
+    symbol = source.read(1)
+    if not symbol:
+        raise Exception("[ERROR]::Empty file")
+
+    row = 1
+    column = 1
 
     while True:
         symbol = source.read(1)
+        column += 1
         if not symbol:
-            raise Exception("[ERROR]::Empty file")
+            break
 
+        word_buffer = ''
+
+        # a finite state machine realization
+        # the finite state machine has 7 states that correspond to 7 types of attributes
+        if attr_vector[ord(symbol)] == 0:
+            while True:
+                if not symbol or attr_vector[ord(symbol)] != 0:
+                    break
+                elif ord(symbol) == 13:
+                    row += 1
+                    column = 0
+        elif something:
+            pass
+            
 
 
     source.close()
