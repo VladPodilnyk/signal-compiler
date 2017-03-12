@@ -98,9 +98,6 @@ def scanner(file_name):
     # ruesult_lst consists encoded information about all tokens from input file
     result_lst = []
 
-    # information about token; indexes: 0->code, 1->row, 2->column, 3->real value
-    token = []
-
     # attribute vector initialization
     attr_vector = []
     init_attr_vector(attr_vector)
@@ -112,27 +109,64 @@ def scanner(file_name):
     row = 1
     column = 1
 
-    while True:
-        symbol = source.read(1)
-        column += 1
-        if not symbol:
-            break
-
+    while symbol:
         word_buffer = ''
 
         # a finite state machine realization
         # the finite state machine has 7 states that correspond to 7 types of attributes
+
+        # 0 - space, eof, eol, etc
         if attr_vector[ord(symbol)] == 0:
-            while True:
-                if not symbol or attr_vector[ord(symbol)] != 0:
-                    break
-                elif ord(symbol) == 13:
+            while symbol and attr_vector[ord(symbol)] == 0:
+                if ord(symbol) == 13:
                     row += 1
                     column = 0
-        elif something:
-            pass
-            
+                else:
+                    column += 1
+                symbol = source.read(1)
 
+        # 1 - integer constants
+        elif attr_vector[ord(symbol)] == 1:
+            while symbol and attr_vector[ord(symbol)] == 1:
+                word_buffer += symbol
+                column += 1
+                symbol = source.read(1)
+            result_lst.append([add_to_cons(word_buffer), row, column, word_buffer])
+
+        # 2 - identifier
+        elif attr_vector[ord(symbol)] == 2:
+            while symbol and (attr_vector[ord(symbol)] == 2 or attr_vector[ord(symbol)] == 1):
+                word_buffer += symbol.upper()
+                column += 1
+                symbol = source.read(1)
+            result_lst.append([add_to_id_table(word_buffer), row, column, word_buffer])
+
+        # 3 - delimeters(=, ;, :)
+        elif attr_vector[ord(symbol)] == 3:
+            column += 1
+            result_lst.append([DELIMETERS[symbol], row, column, symbol])
+            symbol = source.read(1)
+
+        # 4 - complex delimeters (>=, <=, <>)
+        elif attr_vector[ord(symbol)] == 4:
+            word_buffer += symbol
+            symbol = source.read(1)
+            word_buffer += symbol
+            if word_buffer in KEYWORDS.keys():
+                column += 2
+                result_lst.append([KEYWORDS[word_buffer], row, column, word_buffer])
+                symbol = source.read(1)
+            else:
+                column += 1
+                result_lst.append(DELIMETERS[word_buffer[0]], row, column, word_buffer[0])
+
+        # 5 - comments
+        elif attr_vector[ord(symbol)] == 5:
+            pass
+
+        # 6 - errors
+        elif attr_vector[ord(symbol)] == 6:
+            pass
 
     source.close()
 
