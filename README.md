@@ -1,10 +1,10 @@
 # Translator(part of the compiler development course at NTUU "KPI")
 ## Grammar of the input language
-<signal-program> --> <program>
-<program> --> PROGRAM <procedure-identifier> ;
-<block>.
-<block> --> <variable-declarations> BEGIN
-<statements-list> END
+_<signal-program> --> <program>_
+_<program> --> PROGRAM <procedure-identifier> ;_
+_<block>._
+_<block> --> <variable-declarations> BEGIN_
+_<statements-list> END_
 <variable-declarations> --> VAR <declarations-
 list> | <empty>
 <declarations-list> --> <declaration> <declara-
