@@ -1,6 +1,7 @@
 """ Lexical analyser: LAB1 in Compiler development course """
 
 # created by Vlad Podilnyk
+
 import sys
 
 # description of standart tables (keywords, delimeters, allowed symbols)
@@ -20,9 +21,7 @@ DELIMETERS = {'<': 200,
               '>': 201,
               '=': 202,
               ':': 203,
-              ';': 204,
-              '(': 205,
-              ')': 206}
+              ';': 204,}
 
 ID_TABLE = {}
 
@@ -44,19 +43,19 @@ def init_attr_vector():
 
     attr_vect = [6] * 128
     attr_vect[40] = 5
-    attr_vect[41] = 3
+    attr_vect[41] = 6
     attr_vect[58] = 4
     attr_vect[59] = 3
     attr_vect[60] = 4
     attr_vect[61] = 3
     attr_vect[62] = 4
-    for index in range(128):
-        if index in range(0, 33):
-            attr_vect[index] = 0
-        elif index in range(48, 58):
-            attr_vect[index] = 1
-        elif index in range(65, 91) or index in range(97, 123):
-            attr_vect[index] = 2
+    for indx in range(128):
+        if indx in range(0, 33):
+            attr_vect[indx] = 0
+        elif indx in range(48, 58):
+            attr_vect[indx] = 1
+        elif indx in range(65, 91) or indx in range(97, 123):
+            attr_vect[indx] = 2
 
     return attr_vect
 
@@ -89,6 +88,15 @@ def add_to_cons(value):
         return CONST_TABLE[value]
 
 
+def index(value):
+    """ The function checks whether a symbol is valid or not """
+    if ord(value) > 127:
+        return 127
+    return ord(value)
+
+
+
+
 def scanner(file_name):
     """ The function reads terms from a file, checks them and replaces with special code """
 
@@ -113,12 +121,11 @@ def scanner(file_name):
 
     while symbol:
         word_buffer = ''
-
         # a finite state machine realization
         # the finite state machine has 7 states that correspond to 7 types of attributes
 
         # 0 - space, eof, eol, etc
-        if attr_vector[ord(symbol)] == 0:
+        if attr_vector[index(symbol)] == 0:
             while symbol and attr_vector[ord(symbol)] == 0:
                 if ord(symbol) == 10:
                     row += 1
@@ -128,7 +135,7 @@ def scanner(file_name):
                 symbol = source.read(1)
 
         # 1 - integer constants
-        elif attr_vector[ord(symbol)] == 1:
+        elif attr_vector[index(symbol)] == 1:
             column += 1
             while symbol and attr_vector[ord(symbol)] == 1:
                 word_buffer += symbol
@@ -137,7 +144,7 @@ def scanner(file_name):
             column += len(word_buffer) - 1
 
         # 2 - identifier
-        elif attr_vector[ord(symbol)] == 2:
+        elif attr_vector[index(symbol)] == 2:
             column += 1
             while symbol and (attr_vector[ord(symbol)] == 2 or attr_vector[ord(symbol)] == 1):
                 word_buffer += symbol.upper()
@@ -146,13 +153,13 @@ def scanner(file_name):
             column += len(word_buffer) - 1
 
         # 3 - delimeters(=, ;, :)
-        elif attr_vector[ord(symbol)] == 3:
+        elif attr_vector[index(symbol)] == 3:
             column += 1
             result_lst.append([DELIMETERS[symbol], row, column, symbol])
             symbol = source.read(1)
 
         # 4 - complex delimeters (>=, <=, <>)
-        elif attr_vector[ord(symbol)] == 4:
+        elif attr_vector[index(symbol)] == 4:
             word_buffer += symbol
             symbol = source.read(1)
             word_buffer += symbol
@@ -165,25 +172,40 @@ def scanner(file_name):
                 result_lst.append([DELIMETERS[word_buffer[0]], row, column, word_buffer[0]])
 
         # 5 - comments
-        elif attr_vector[ord(symbol)] == 5:
+        elif attr_vector[index(symbol)] == 5:
             symbol = source.read(1)
             if symbol == '*':
-                # delete comment
-                pass
+                column += 2
+                while symbol:
+                    symbol = source.read(1)
+                    if symbol == '\n':
+                        row += 1
+                        column = 0
+                    elif symbol == '*':
+                        symbol = source.read(1)
+                        if symbol == ')':
+                            column += 2
+                            break
+                    column += 1
+                symbol = source.read(1)
             else:
-                # error
-                pass
-            pass
+                column += 1
+                result_lst.append(['ERROR', row, column, '('])
 
         # 6 - errors
         elif attr_vector[ord(symbol)] == 6:
-            pass
+            column += 1
+            result_lst.append(['ERROR', row, column, symbol])
+            symbol = source.read(1)
 
     source.close()
     return result_lst
 
+
+
 if __name__ == '__main__':
     print("Have a nice day!!!")
     l = scanner("t.txt")
+    print(l)
     for line in l:
         print(line)
