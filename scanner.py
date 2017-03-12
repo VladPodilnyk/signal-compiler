@@ -13,7 +13,8 @@ KEYWORDS = {'PROGRAM': 100,
             'NOT': 104,
             '<=': 105,
             '>=': 106,
-            '<>': 106}
+            '<>': 106,
+            ':=': 107}
 
 DELIMETERS = {'<': 200,
               '>': 201,
@@ -29,7 +30,7 @@ CONST_TABLE = {}
 
 # functions for initializing basic tables
 
-def init_attr_vector(attr_vect):
+def init_attr_vector():
     """ The function inits an attribute vector """
 
     #------------attributes------------
@@ -44,7 +45,7 @@ def init_attr_vector(attr_vect):
     attr_vect = [6] * 128
     attr_vect[40] = 5
     attr_vect[41] = 3
-    attr_vect[58] = 3
+    attr_vect[58] = 4
     attr_vect[59] = 3
     attr_vect[60] = 4
     attr_vect[61] = 3
@@ -56,6 +57,8 @@ def init_attr_vector(attr_vect):
             attr_vect[index] = 1
         elif index in range(65, 91) or index in range(97, 123):
             attr_vect[index] = 2
+
+    return attr_vect
 
 def add_to_id_table(value):
     """ The function adds token to an ID_TABLE and returns an appropriate code\
@@ -99,15 +102,14 @@ def scanner(file_name):
     result_lst = []
 
     # attribute vector initialization
-    attr_vector = []
-    init_attr_vector(attr_vector)
+    attr_vector = init_attr_vector()
 
     symbol = source.read(1)
     if not symbol:
         raise Exception("[ERROR]::Empty file")
 
     row = 1
-    column = 1
+    column = 0
 
     while symbol:
         word_buffer = ''
@@ -118,7 +120,7 @@ def scanner(file_name):
         # 0 - space, eof, eol, etc
         if attr_vector[ord(symbol)] == 0:
             while symbol and attr_vector[ord(symbol)] == 0:
-                if ord(symbol) == 13:
+                if ord(symbol) == 10:
                     row += 1
                     column = 0
                 else:
@@ -127,19 +129,21 @@ def scanner(file_name):
 
         # 1 - integer constants
         elif attr_vector[ord(symbol)] == 1:
+            column += 1
             while symbol and attr_vector[ord(symbol)] == 1:
                 word_buffer += symbol
-                column += 1
                 symbol = source.read(1)
             result_lst.append([add_to_cons(word_buffer), row, column, word_buffer])
+            column += len(word_buffer) - 1
 
         # 2 - identifier
         elif attr_vector[ord(symbol)] == 2:
+            column += 1
             while symbol and (attr_vector[ord(symbol)] == 2 or attr_vector[ord(symbol)] == 1):
                 word_buffer += symbol.upper()
-                column += 1
                 symbol = source.read(1)
             result_lst.append([add_to_id_table(word_buffer), row, column, word_buffer])
+            column += len(word_buffer) - 1
 
         # 3 - delimeters(=, ;, :)
         elif attr_vector[ord(symbol)] == 3:
@@ -158,10 +162,17 @@ def scanner(file_name):
                 symbol = source.read(1)
             else:
                 column += 1
-                result_lst.append(DELIMETERS[word_buffer[0]], row, column, word_buffer[0])
+                result_lst.append([DELIMETERS[word_buffer[0]], row, column, word_buffer[0]])
 
         # 5 - comments
         elif attr_vector[ord(symbol)] == 5:
+            symbol = source.read(1)
+            if symbol == '*':
+                # delete comment
+                pass
+            else:
+                # error
+                pass
             pass
 
         # 6 - errors
@@ -169,19 +180,10 @@ def scanner(file_name):
             pass
 
     source.close()
+    return result_lst
 
 if __name__ == '__main__':
     print("Have a nice day!!!")
-    scanner("k.txt")
-
-
-
-
-
-
-
-
-
-
-
-
+    l = scanner("t.txt")
+    for line in l:
+        print(line)
