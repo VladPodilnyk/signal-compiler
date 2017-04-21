@@ -2,8 +2,6 @@
 
 # created by Vlad Podilnyk
 
-import sys
-
 # description of standart tables (keywords, delimeters, allowed symbols)
 
 KEYWORDS = {'PROGRAM': 100,
@@ -15,7 +13,8 @@ KEYWORDS = {'PROGRAM': 100,
             '<=': 105,
             '>=': 106,
             '<>': 106,
-            ':=': 107}
+            ':=': 107,
+            'INTEGER': 108}
 
 DELIMETERS = {'<': 200,
               '>': 201,
@@ -173,6 +172,7 @@ def scanner(file_name):
 
         # 5 - comments
         elif attr_vector[index(symbol)] == 5:
+            flag = False
             symbol = source.read(1)
             if symbol == '*':
                 column += 2
@@ -187,6 +187,8 @@ def scanner(file_name):
                             column += 2
                             break
                     column += 1
+                if flag:
+                    raise Exception("[ERROR]::Expected '*)' but end of file found")
                 symbol = source.read(1)
             else:
                 column += 1
@@ -202,10 +204,9 @@ def scanner(file_name):
     return result_lst
 
 
-
+# under tests
 if __name__ == '__main__':
     print("Have a nice day!!!")
     l = scanner("t.txt")
-    print(l)
     for line in l:
-        print(line)
+        print("{:>2}:{:>2} {:>5} {}".format(line[1], line[2], line[0], line[3]))
