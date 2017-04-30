@@ -2,6 +2,8 @@
 
 # created by Vlad Podilnyk
 
+#TODO write good documantation and comments for functions
+
 from functools import partial
 
 # import lexical analyser and information tables
@@ -14,7 +16,7 @@ next_item = None
 
 COMP_OP = [105, 106, 107, 200, 201, 202]
 
-# maybe
+# maybe-----------------------------------------------------------------------
 def next_(list_of_tokens):
     """ generator (tmp docstr) """
     index = 0
@@ -28,6 +30,8 @@ def next_token(gen):
         return next(gen)
     except StopIteration:
         return [None] * 4
+
+#-----------------------------------------------------------------------------
 
 def integer_const(tokens):
     """ func checks int const """
@@ -77,14 +81,63 @@ def comparsion_operator(tokens):
     else:
         return (Node(None, "ERROR"), None)
 
-def logical_mult():
-    pass
+def logical_multiplier(tokens):
+    return (None, [])
 
-def logical():
-    pass
 
-def logical_summand():
-    pass
+def logical_mult_lts(tokens):
+    """ Damn, recursive func """
+    log_mult = Node(None, "<logical_multiplier_list>")
+    if tokens[0][0] == 104:
+        log_mult.append(Node(tokens[0], "<KEYWORDS>"))
+        if tokens[1:] == []:
+            log_mult.append(Node(None, "ERROR"))
+            return (log_mult, None)
+
+        child, tokens_lst = logical_multiplier(tokens[1:])
+        log_mult.append(child)
+        if tokens_lst is None:
+            return (log_mult, None)
+
+        child, tokens_lst = logical_mult_lts(tokens_lst)
+        if child is not None:
+            log_mult.append(child)
+        return (log_mult, tokens_lst)
+
+    return (None, tokens)
+
+def logical(tokens):
+    """ logical """
+    logic = Node(None, "<logical>")
+    if tokens[0][0] == 103:
+        logic.append(Node(tokens[0], "<KEYWORDS>"))
+        if tokens[1:] == []:
+            logic.append(Node(None, "ERROR"))
+            return (logic, None)
+
+        child, tokens_lst = logical_summand(tokens[1:])
+        logic.append(child)
+        if tokens_lst is None:
+            return(logic, None)
+
+        log, tokens_lst = logical(tokens_lst)
+        if log is not None:
+            logic.append(log)
+        return (logic, tokens_lst)
+
+    return (None, tokens)
+
+
+def logical_summand(tokens):
+    """ logical summand """
+    node = Node(None, "<logical_summand>")
+    child, tokens_lst = logical_multiplier(tokens)
+    node.append(child)
+    if tokens_lst is None:
+        return (node, None)
+    child, tokens_lst = logical_mult_lts(tokens_lst)
+    node.append(child)
+    return (node, tokens_lst)
 
 def conditional_expr():
     pass
