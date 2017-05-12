@@ -38,4 +38,5 @@ class Node:
         self.__rule = rule
 
     def append(self, node):
-        self.child.append(node)
+        if node is not None:
+            self.child.append(node)
