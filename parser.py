@@ -2,50 +2,33 @@
 
 # created by Vlad Podilnyk
 
-#TODO write good documantation and comments for functions
-
-from functools import partial
+#TODO write good documentation and comments for functions
 
 # import lexical analyser and information tables
-from scanner import DELIMETERS, KEYWORDS, ID_TABLE, CONST_TABLE
+#from scanner import DELIMETERS, KEYWORDS, ID_TABLE, CONST_TABLE
 from scanner import scanner
 from Node import Node
 
-# reference to the iterator func
-next_item = None
+COMP_OP = [105, 106, 107, 108, 200, 201, 202]
 
-COMP_OP = [105, 106, 107, 200, 201, 202]
+def traversal(tree, order):
+    print('\t'*order, "data:{}\n".format(tree.data), '\t'*order, "rule:{}\n".format(tree.rule))
+    order += 1
+    for item in tree.child:
+        traversal(item, order)
 
-# maybe-----------------------------------------------------------------------
-def next_(list_of_tokens):
-    """ generator (tmp docstr) """
-    index = 0
-    lst_length = len(list_of_tokens)
-    while index < lst_length:
-        yield list_of_tokens[index]
-        index += 1
-
-def next_token(gen):
-    try:
-        return next(gen)
-    except StopIteration:
-        return [None] * 4
-
-#-----------------------------------------------------------------------------
 
 def integer_const(tokens):
     """ func checks int const """
-    if tokens[0][0] in range(300, 1000):
+    if tokens != [] and tokens[0][0] in range(300, 1000):
         return (Node(tokens[0], "<unsigned-integer>"), tokens[1:])
-    else:
-        return (Node(None, "ERROR"), None)
+    return (Node(None, "ERROR"), None)
 
 def identifier(tokens):
     """ some comment here """
-    if tokens[0][0] in range(100, 200):
+    if tokens != [] and tokens[0][0] in range(1000, 5000):
         return (Node(tokens[0], "<identifier>"), tokens[1:])
-    else:
-        return (Node(None, "ERROR"), None)
+    return (Node(None, "ERROR"), None)
 
 def variable_id(tokens):
     """ var id """
@@ -82,10 +65,52 @@ def comparsion_operator(tokens):
         return (Node(None, "ERROR"), None)
 
 def logical_multiplier(tokens):
-    return (None, [])
+    """ keep it up :) sorry, I will add docstring .....soon"""
+
+    lmult = Node(None, "<logical_multiplier>")
+    child, tokens_lst = expression(tokens)
+    # <expression><comparsion_operator><expression>
+    if tokens_lst is not None:
+        lmult.append(child)
+        child, tokens_lst = comparsion_operator(tokens_lst)
+        lmult.append(child)
+        if tokens_lst is None:
+            return (lmult, None)
+        child, tokens_lst = expression(tokens_lst)
+        lmult.append(child)
+        return (lmult, tokens_lst)
+
+    # <conditional_expression>
+    if tokens[0][0] == 205:
+        lmult.append(Node(tokens[0], "<DELIMETERS>"))
+        child, tokens_lst = conditional_expr(tokens[1:])
+        lmult.append(child)
+        if tokens_lst is None:
+            return (lmult, None)
+
+        if tokens_lst != []:
+            if tokens_lst[0][0] == 206:
+                lmult.append(Node(tokens[0], "<DELIMETERS>"))
+                return (lmult, tokens_lst[1:])
+        lmult.append(Node(None, "ERROR"))
+        return (lmult, None)
+
+    # NOT <logical_multiplier>
+    if tokens[0][0] == 105:
+        lmult.append(Node(tokens[0], "<KEYWORDS>"))
+        if tokens[1:] == []:
+            lmult.append(Node(None, "ERROR"))
+            return (lmult, None)
+
+        child, tokens_lst = logical_multiplier(tokens[1:])
+        lmult.append(child)
+        return (lmult, tokens_lst)
+
+    lmult.append(Node(None, "ERROR"))
+    return (lmult, None)
 
 
-def logical_mult_lts(tokens):
+def logical_mult_lst(tokens):
     """ Damn, recursive func """
     log_mult = Node(None, "<logical_multiplier_list>")
     if tokens[0][0] == 104:
@@ -99,7 +124,7 @@ def logical_mult_lts(tokens):
         if tokens_lst is None:
             return (log_mult, None)
 
-        child, tokens_lst = logical_mult_lts(tokens_lst)
+        child, tokens_lst = logical_mult_lst(tokens_lst)
         if child is not None:
             log_mult.append(child)
         return (log_mult, tokens_lst)
@@ -135,57 +160,171 @@ def logical_summand(tokens):
     node.append(child)
     if tokens_lst is None:
         return (node, None)
-    child, tokens_lst = logical_mult_lts(tokens_lst)
+    child, tokens_lst = logical_mult_lst(tokens_lst)
     node.append(child)
     return (node, tokens_lst)
 
-def conditional_expr():
-    pass
+def conditional_expr(tokens):
+    """ describe conditional expression """
 
-def statement():
-    pass
+    cond_expr = Node(None, "<conditional_expression>")
+    child, tokens_lst = logical_summand(tokens)
+    cond_expr.append(child)
+    if tokens_lst is None:
+        return (cond_expr, None)
+
+    child, tokens_lst = logical(tokens_lst)
+    cond_expr.append(child)
+    return (cond_expr, tokens_lst)
+
+def statement(tokens):
+    """ your advertisement here """
+
+    node = Node(None, "<statement>")
+    child, tokens_lst = variable_id(tokens)
+    node.append(child)
+    if tokens_lst is None or tokens_lst == []:
+        return (node, None)
+    # 109 == ':='
+    if tokens_lst[0][0] == 109:
+        node.append(Node(tokens_lst[0], "<KEYWORDS>"))
+        if tokens_lst[1:] == []:
+            return (node, None)
+        child, tokens_lst = conditional_expr(tokens_lst[1:])
+        node.append(child)
+        if tokens_lst is None or tokens_lst == []:
+            return (node, None)
+        # 204 == ';'
+        if tokens_lst[0][0] == 204:
+            node.append(Node(tokens_lst[0], "<DELIMETERS>"))
+            return (node, tokens_lst[1:])
+        node.append(Node(None, "ERROR"))
+        return (node, None)
+
+    node.append(Node(None, "ERROR"))
+    return (node, None)
+
+# -----------------------------------------------------------------------------------------------
 
 # statement list
-def statement_list():
-    pass
+def statement_list(tokens):
+    """ bang bang """
+    node = Node(None, "<statement_list>")
+    child, tokens_lst = statement(tokens)
+    node.append(child)
+    if tokens_lst is None:
+        return (None, tokens)
 
-def declaration():
-    pass
+    child, tokens_lst = statement_list(tokens_lst)
+    node.append(child)
+    return (node, tokens_lst)
+
+def declaration(tokens):
+    """ declar """
+    node = Node(None, "<declaration>")
+    child, tokens_lst = variable_id(tokens)
+    node.append(child)
+    if tokens_lst is None or len(tokens_lst) < 3:
+        return (node, None)
+
+    if tokens_lst[0][0] == 203:
+        node.append(Node(tokens_lst[0], "<KEYWORDS>"))
+        if tokens_lst[1][0] == 110:
+            node.append(Node(tokens_lst[1], "<KEYWORDS>"))
+            if tokens_lst[2][0] == 204:
+                node.append(Node(tokens_lst[2], "<KEYWORDS>"))
+                return (node, tokens_lst[3:])
+
+    return (node, None)
+
 
 # declaration list
-def declaration_list():
-    pass
+def declaration_list(tokens):
+    node = Node(None, "<declaration list>")
+
+    if tokens == []:
+        node.append(Node(None, "ERROR"))
+        return (node, None)
+
+    child, tokens_lst = declaration(tokens)
+    node.append(child)
+    if tokens_lst is None:
+        return (None, tokens)
+
+    child, tokens_lst = declaration_list(tokens_lst)
+    node.append(child)
+    return (node, tokens_lst)
 
 # variable decrlaration
-def var_declaration():
-    pass
+def var_declaration(tokens):
+    """ var decl """
+    node = Node(None, "<variable_declarations>")
+    if tokens == []:
+        node.append(Node(None, "ERROR"))
+        return (node, None)
+
+    if tokens[0][0] == 111:
+        node.append(Node(tokens[0], "<KEYWORDS>"))
+        child, tokens_lst = declaration_list(tokens[1:])
+        node.append(child)
+        if tokens_lst is None:
+            return (node, None)
+        return (node, tokens_lst)
+
+    return (None, tokens)
 
 # describe program block
-def block():
-    pass
+def block(tokens):
+    """ smth """
+    node = Node(None, "<block>")
+    child, tokens_lst = var_declaration(tokens)
+    node.append(child)
+    if tokens_lst is None:
+        return (node, None)
 
-def signal_program():
-    pass
+    if tokens_lst != []:
+        if tokens_lst[0][0] == 101:
+            node.append(Node(tokens_lst[0], "<KEYWORDS>"))
+            child, tokens_lst = statement_list(tokens_lst[1:])
+            node.append(child)
+            if tokens_lst is None:
+                return (node, None)
+
+            if tokens_lst != [] and tokens_lst[0][0] == 102:
+                node.append(Node(tokens_lst[0], "<KEYWORDS>"))
+                return (node, tokens_lst[1:])
+
+    node.append(Node(None, "ERROR"))
+    return (node, None)
+
+def signal_program(tokens):
+    node = Node(None, "<program>")
+    if tokens != [] and tokens[0][0] == 100:
+        node.append(Node(tokens[0], "<KEYWORDS>"))
+        child, tokens_lst = procedure_id(tokens[1:])
+        node.append(child)
+        if tokens_lst is None or tokens_lst == []:
+            return (node, None)
+
+        if tokens_lst[0][0] == 204:
+            node.append(Node(tokens_lst[0], "<KEYWORDS>"))
+            child, tokens_lst = block(tokens_lst[1:])
+            node.append(child)
+            return (node, tokens_lst)
+    node.append(Node(None, "ERROR"))
+    return (node, None)
 
 # main fucnction
 def parser(list_of_tokens):
-    gen = next_(list_of_tokens)
-    global next_item
-    next_item = partial(next_token, gen)
-
+    tree, rest = signal_program(list_of_tokens)
+    return (tree, rest)
 
 
 
 # I made  this part of code for test
 if __name__ == "__main__":
-    l = scanner("t.txt") 
-    for line in l:
-        print("{:>2}:{:>2} {:>5} {}".format(line[1], line[2], line[0], line[3]))
-
-    print(DELIMETERS)
-    print('\n____________________________________\n')
-    print(KEYWORDS)
-    print('\n____________________________________\n')
-    print(ID_TABLE)
-    print('\n____________________________________\n')
-    print(CONST_TABLE)
+    l = scanner("t.txt")
+    tree, lexem = parser(l)
+    print(lexem)
+    print("\n-----------\n")
+    traversal(tree, 0)
