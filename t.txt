@@ -3,12 +3,13 @@ for
 my scanner*)
 program test;
 var foo : integer;
-var heyJoe1234:integer;
-var steady: integer;
-var 123str,444: float;
+    heyJoe1234:integer;
+    steady: integer;
+    (*123str,444: float;*)
 (******block*******)
 begin
-    foo := 12345;
-    heyJoe1234 := 554;
-    steady:=123<>30 AND 123<>30 OR NOT foo <= heyJoe1234;
+   (* foo := 12345;*)
+    (*heyJoe1234 := 554;*)
+   steady:= [123<>30 AND 123<>30] OR NOT foo <= heyJoe1234;
+   foo := NOT foo <> heyJoe1234;
 end
