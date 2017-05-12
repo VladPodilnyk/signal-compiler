@@ -14,13 +14,16 @@ KEYWORDS = {'PROGRAM': 100,
             '>=': 107,
             '<>': 108,
             ':=': 109,
-            'INTEGER': 110}
+            'INTEGER': 110,
+            'VAR': 111,}
 
 DELIMETERS = {'<': 200,
               '>': 201,
               '=': 202,
               ':': 203,
-              ';': 204,}
+              ';': 204,
+              '[': 205,
+              ']': 206,}
 
 ID_TABLE = {}
 
@@ -48,6 +51,8 @@ def init_attr_vector():
     attr_vect[60] = 4
     attr_vect[61] = 3
     attr_vect[62] = 4
+    attr_vect[91] = 3
+    attr_vect[93] = 3
     for indx in range(128):
         if indx in range(0, 33):
             attr_vect[indx] = 0
@@ -209,4 +214,5 @@ if __name__ == '__main__':
     print("Have a nice day!!!")
     l = scanner("t.txt")
     for line in l:
-        print("{:>2}:{:>2} {:>5} {}".format(line[1], line[2], line[0], line[3]))
+        #print("{:>2}:{:>2} {:>5} {}".format(line[1], line[2], line[0], line[3]))
+        print(line)
