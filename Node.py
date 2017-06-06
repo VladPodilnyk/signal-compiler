@@ -40,3 +40,6 @@ class Node:
     def append(self, node):
         if node is not None:
             self.child.append(node)
+
+    def __repr__(self):
+        return "({}, {})".format(self.data, self.rule)

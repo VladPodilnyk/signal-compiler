@@ -12,7 +12,7 @@ from Node import Node
 COMP_OP = [105, 106, 107, 108, 200, 201, 202]
 
 def traversal(tree, order):
-    print('\t'*order, "data:{}\n".format(tree.data), '\t'*order, "rule:{}\n".format(tree.rule))
+    print("{}data:{}\n".format('\t'*order, tree.data), "{}rule:{}\n".format('\t'*order, tree.rule))
     order += 1
     for item in tree.child:
         traversal(item, order)
@@ -22,7 +22,9 @@ def integer_const(tokens):
     """ func checks int const """
     if tokens != [] and tokens[0][0] in range(300, 1000):
         return (Node(tokens[0], "<unsigned-integer>"), tokens[1:])
-    return (Node(None, "ERROR"), None)
+    if tokens == []:
+        return (Node(None, "ERROR"), None)
+    return (Node(tokens[0], "ERROR"), None)
 
 def identifier(tokens):
     """ some comment here """
@@ -90,7 +92,7 @@ def logical_multiplier(tokens):
 
         if tokens_lst != []:
             if tokens_lst[0][0] == 206:
-                lmult.append(Node(tokens[0], "<DELIMETERS>"))
+                lmult.append(Node(tokens_lst[0], "<DELIMETERS>"))
                 return (lmult, tokens_lst[1:])
         lmult.append(Node(None, "ERROR"))
         return (lmult, None)
@@ -204,7 +206,6 @@ def statement(tokens):
     node.append(Node(None, "ERROR"))
     return (node, None)
 
-# -----------------------------------------------------------------------------------------------
 
 # statement list
 def statement_list(tokens):
@@ -213,7 +214,7 @@ def statement_list(tokens):
     child, tokens_lst = statement(tokens)
     node.append(child)
     if tokens_lst is None:
-        return (None, tokens)
+        return (Node(None, "<empty>"), tokens)
 
     child, tokens_lst = statement_list(tokens_lst)
     node.append(child)
@@ -288,13 +289,14 @@ def block(tokens):
             child, tokens_lst = statement_list(tokens_lst[1:])
             node.append(child)
             if tokens_lst is None:
+                node.append(Node(None, "Err"))
                 return (node, None)
 
             if tokens_lst != [] and tokens_lst[0][0] == 102:
                 node.append(Node(tokens_lst[0], "<KEYWORDS>"))
                 return (node, tokens_lst[1:])
 
-    node.append(Node(None, "ERROR"))
+    node.append(Node(tokens_lst[0][1:3], "Error"))
     return (node, None)
 
 def signal_program(tokens):

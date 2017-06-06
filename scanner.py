@@ -15,7 +15,8 @@ KEYWORDS = {'PROGRAM': 100,
             '<>': 108,
             ':=': 109,
             'INTEGER': 110,
-            'VAR': 111,}
+            'VAR': 111,
+            'GOTO': 112,}
 
 DELIMETERS = {'<': 200,
               '>': 201,
@@ -28,6 +29,8 @@ DELIMETERS = {'<': 200,
 ID_TABLE = {}
 
 CONST_TABLE = {}
+
+LEXER_ERRORS = []
 
 # functions for initializing basic tables
 
@@ -107,8 +110,7 @@ def scanner(file_name):
     try:
         source = open(file_name, 'r')
     except FileNotFoundError as err:
-        print("[ERROR]::{}".format(err.strerror))
-        return
+        raise Exception("Error: {}".format(err.strerror))
 
     # ruesult_lst consists encoded information about all tokens from input file
     result_lst = []
@@ -118,7 +120,7 @@ def scanner(file_name):
 
     symbol = source.read(1)
     if not symbol:
-        raise Exception("[ERROR]::Empty file")
+        raise Exception("Error: Empty file")
 
     row = 1
     column = 0
@@ -202,7 +204,8 @@ def scanner(file_name):
         # 6 - errors
         elif attr_vector[ord(symbol)] == 6:
             column += 1
-            result_lst.append(['ERROR', row, column, symbol])
+            #result_lst.append(['ERROR', row, column, symbol])
+            LEXER_ERRORS.append(['ERROR', row, column, symbol])
             symbol = source.read(1)
 
     source.close()
@@ -216,3 +219,5 @@ if __name__ == '__main__':
     for line in l:
         #print("{:>2}:{:>2} {:>5} {}".format(line[1], line[2], line[0], line[3]))
         print(line)
+    
+    print(LEXER_ERRORS)
