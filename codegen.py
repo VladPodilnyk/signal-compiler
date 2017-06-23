@@ -205,6 +205,3 @@ if __name__ == "__main__":
     cgenerator(tree, "out.asm")
     print(ERROR_LOG)
 
-
-
- 

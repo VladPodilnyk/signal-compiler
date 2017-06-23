@@ -3,12 +3,11 @@ for
 my compiler*)
 program test;
 var foo : integer;
-    heyJoe1234:integer;
     steady: integer;
     (*123str,444: float;*)
 (******block*******)
 begin
-   steady := [123<>30 OR 123<>30] AND NOT 12 <= 1234 AND 123 > 3;
-   (*foo := NOT foo <> heyJoe1234;*)
+   steady := [123<>30 OR 123<>30] AND NOT 11 <= 1234 AND 123 > 3;
+   foo := NOT foo <> heyJoe1234;
    (*foo := 123 > 30;*)
 end
